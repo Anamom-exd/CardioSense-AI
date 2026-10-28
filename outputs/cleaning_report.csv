@@ -1,0 +1,6 @@
+,rows
+raw_rows,70000
+after_duplicates,69976
+removed_bp,1329
+removed_hw,124
+clean_rows,68523

@@ -1,0 +1,10 @@
+check,found,expected,pass
+SHA-256,21a705d23381b0dfd6a6416da701b490744f1fc3b47e9ff3db3968c420ffa10c,-,True
+Columns match expected schema,True,True,True
+Rows,70000,70000,True
+Target column 'cardio' is binary 0/1,True,True,True
+cardio = 0 count,35021,35021,True
+cardio = 1 count,34979,34979,True
+Missing values,0,0,True
+id column unique,True,True,True
+Duplicate rows ignoring id,24,24,True

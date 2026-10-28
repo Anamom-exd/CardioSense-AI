@@ -1,0 +1,6 @@
+check,result
+Target column absent from features,pass
+Same feature order in train/val/test,pass
+Scalers fitted inside Pipelines on training data only,pass
+Val rows whose feature vector also occurs in train,1050
+Test rows whose feature vector also occurs in train,1095

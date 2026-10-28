@@ -1,0 +1,37 @@
+{
+  "final_model": "Gradient Boosting",
+  "selection_criterion": "highest validation ROC-AUC",
+  "split_sizes": {
+    "train": 47966,
+    "validation": 10278,
+    "test": 10279
+  },
+  "features": [
+    "age_years",
+    "gender",
+    "height",
+    "weight",
+    "bmi",
+    "ap_hi",
+    "ap_lo",
+    "cholesterol",
+    "gluc",
+    "smoke",
+    "alco",
+    "active"
+  ],
+  "validation": {
+    "Accuracy": 0.7377,
+    "Precision": 0.7538,
+    "Recall": 0.6978,
+    "F1": 0.7247,
+    "ROC_AUC": 0.8002
+  },
+  "test": {
+    "Accuracy": 0.7366,
+    "Precision": 0.7559,
+    "Recall": 0.6909,
+    "F1": 0.7219,
+    "ROC_AUC": 0.8022
+  }
+}

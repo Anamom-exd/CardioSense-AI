@@ -8,6 +8,8 @@ Streamlit analytics dashboard (prediction, threshold analysis, model performance
 
 Author: Om Punekar · Roll No. 13 · Section A7-B1
 
+**Live app:** https://cardiosense-risk-predictor.streamlit.app/ (Streamlit Community Cloud; free apps may sleep when unused, so the first visit can be slow)
+
 ## Dataset and attribution
 - **Name:** Cardiovascular Disease dataset (Svetlana Ulianova), 70,000 records, 11 features + target `cardio`.
 - **Source:** https://www.kaggle.com/datasets/sulianova/cardiovascular-disease-dataset
@@ -142,14 +144,17 @@ Single public dataset and a random split (no external validation); hyper-paramet
 probabilities are not calibrated; the 0.4/0.6 risk bands in the app are illustrative, not clinical cut-offs.
 
 ## Deployment
-**Not deployed yet.** The app runs locally (see above), and on other devices on the same Wi-Fi. For a public link, Streamlit Community Cloud
-(free) can run it straight from this GitHub repository:
+**Deployed on Streamlit Community Cloud:** https://cardiosense-risk-predictor.streamlit.app/ (repository `Anamom-exd/CardioSense-AI`, branch `main`, main file `app/app.py`).
+The app also runs locally (see above). The live site was checked in browser emulation only (phone, tablet and desktop widths): it loaded without errors, and four test
+inputs gave the same probabilities as the local model. It has **not** been tested on a physical phone or tablet. Streamlit Cloud adds its own toolbar and badges,
+which can cover part of the page on phone-width screens.
+
+To deploy your own copy the same way:
 1. Push the repo to GitHub. It must include `models/best_model.joblib`, `outputs/` and `requirements.txt`; the raw dataset is not needed.
 2. Sign in at https://share.streamlit.io with GitHub, choose **Create app**, pick the repository and branch, and set the main file to `app/app.py`.
 3. In *Advanced settings* choose Python 3.12 or newer. `requirements.txt` pins `scikit-learn==1.9.1` so the saved model loads exactly as it was trained.
 
 No secrets or API keys are needed. Free apps can go to sleep when unused, so the first visit afterwards may be slow.
-No public URL exists yet: [add URL if you deploy].
 
 ## Disclaimer
 Educational project, not a medical tool.

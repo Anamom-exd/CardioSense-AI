@@ -127,9 +127,9 @@ That is why the app shows an "educational use only" notice and does not give med
 
 **Q. How do you run it?** Install the packages from `requirements.txt` (scikit-learn is pinned to 1.9.1 because the saved model was pickled with that version), then `python -m streamlit run app/app.py`. It opens at `http://localhost:8501`.
 
-**Q. Is it deployed online?** **No.** It runs locally. The README describes how it could be deployed to Streamlit Community Cloud, but that has not been done, and the report's live-URL field is intentionally still a placeholder.
+**Q. Is it deployed online?** **Yes.** It runs on Streamlit Community Cloud at https://cardiosense-risk-predictor.streamlit.app/ (free tier, built from the GitHub repo's `main` branch, main file `app/app.py`). Free apps can go to sleep when unused, so the first visit may take a moment. It also runs locally.
 
-**Q. Does it work on phones?** The layout is responsive and was checked in **browser device emulation** (375×812 phone, 768×1024 tablet, desktop). It has **not** been tested on a physical phone or tablet, in other browsers, or from another device over Wi-Fi. Same-Wi-Fi access is documented in the README but was not verified end to end.
+**Q. Does it work on phones?** The layout is responsive and was checked in **browser device emulation** (375×812 phone, 768×1024 tablet, desktop). The live site was checked the same way (no horizontal overflow on any tab, and test inputs gave the same probabilities as the local model). It has **not** been tested on a physical phone or tablet, or in other browsers. Streamlit Cloud adds its own toolbar and badges, which can cover part of the page on phone-width screens. Same-Wi-Fi access is documented in the README but was not verified end to end.
 
 ---
 

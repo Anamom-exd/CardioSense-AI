@@ -25,16 +25,20 @@ data/raw/                  raw Kaggle CSV (git-ignored, see above); data/*.csv s
 download_data.py           downloads the raw dataset from Kaggle and checks its checksum
 verify_dataset.py          validates the raw file against the expected schema and counts
 preprocess.py              cleaning + feature engineering + stratified 70/15/15 split
-train_models.py            trains 8 models on the same split, writes metrics, plots, saved model
+train_models.py            trains 7 models on the same split, writes metrics, plots, saved model
 clustering.py              optional exploratory K-Means analysis (separate from prediction)
-app/app.py                 Streamlit web app
+app/app.py                 Streamlit web app (responsive: phone, tablet, desktop)
+.streamlit/config.toml     navy/teal theme and a minimal toolbar
 models/best_model.joblib   final model (created by train_models.py)
 outputs/                   metrics tables, predictions and plots read by the app and the report
+outputs/screenshots/       app screenshots (phone, tablet, desktop)
 run.py                     one-command pipeline + app launcher
+CardioSense_AI_Report.*    project report (.docx and .pdf)
+CardioSense_AI_Presentation.pptx   presentation slides
 ```
 
 ## How to run
-Python 3.10+ is recommended.
+Python 3.11 or newer is required (3.12 recommended).
 ```bash
 python -m venv .venv
 .venv\Scripts\activate             # macOS/Linux: source .venv/bin/activate
@@ -50,18 +54,65 @@ Or simply `python run.py` (add `--no-install` / `--no-train` to skip steps).
 The app only needs `models/` and `outputs/`, so `streamlit run app/app.py` works without retraining.
 Run the commands from the project root: Streamlit reads the navy/teal theme from `.streamlit/config.toml` relative to the working directory
 (the scripts themselves use paths relative to their own location and work from anywhere).
+On Windows, if `streamlit` is "not recognized", use `python -m streamlit run app/app.py` instead.
+
+## Open the app on your phone or tablet (same Wi-Fi)
+The app is a normal web page, so a phone or tablet on the same network *should* be able to open it in a browser. This has **not** been verified on a physical device (see "What was actually tested" below).
+1. **Start the app so other devices can reach it** (run from the project folder):
+   ```bash
+   python -m streamlit run app/app.py --server.address 0.0.0.0
+   ```
+   `--server.address 0.0.0.0` means "accept connections from other devices on my network". Streamlit also prints a
+   **Network URL** when it starts, so you can use that address directly if you see it.
+2. **Find your computer's local IP address.** Windows: run `ipconfig` and read the *IPv4 Address* of your Wi-Fi adapter
+   (it looks like `192.168.1.23` or `10.0.0.5`). macOS/Linux: run `ifconfig` or `ip addr`.
+3. **Connect your phone to the same Wi-Fi network** as the computer.
+4. **On the phone, open the browser and type** `http://<your-computer-ip>:8501`, for example `http://192.168.1.23:8501`.
+5. **If the page does not load:** allow Python through the Windows firewall for *Private* networks (Windows asks the first time);
+   check that both devices are on the same Wi-Fi (guest and public networks often block device-to-device traffic);
+   check that the port matches the one Streamlit printed (8501 by default).
+6. Stop the app with `Ctrl+C`. The app has no login, so use this only on networks you trust and never forward the port to the internet.
+
+## Responsive layout for phones, tablets and desktops (tested in browser emulation only)
+- The layout adapts to the screen: on phones the metric cards form a 2 x 2 grid, the four tabs wrap onto two rows and the form and result stack;
+  on tablets and desktops there are four cards in a row and a two-column form.
+- Touch-friendly: inputs, buttons, checkboxes and tabs are at least about 44 px high on phones and tablets, text is at least 12 px, and the page never scrolls sideways.
+  Tables are sized to fit the screen (the full table is in an expander).
+- The educational-use notice is a banner on every screen size (and also in the sidebar on larger screens).
+- **What was actually tested:** a desktop browser's device emulation at 375 x 812 (phone), 768 x 1024 (tablet) and a 1024 px-wide desktop window,
+  on all four tabs, measuring page overflow, control sizes, text sizes, tab wrapping, tables and charts, plus automated Streamlit tests of the
+  prediction flow (predictions for 12 test inputs, covering all three risk bands, were identical before and after the layout changes).
+  The same-Wi-Fi command was checked only up to the server answering on the computer's own network address.
+  **It was not tested on real Android or iOS devices or from another device, and only one browser engine was used**, so "works in emulation" is not a
+  guarantee for every phone or browser.
+- Screenshots in `outputs/screenshots/`: desktop views of all four tabs (`01_predict.png`, `02_threshold_analysis.png`, `03_model_performance.png`,
+  `04_data_insights.png`), phone views (`mobile_375x812_*.png`), a tablet view (`tablet_768x1024_predict_result.png`) and `desktop_1024_predict_result.png`.
 
 ## Pipeline
 1. **Cleaning** - removed 24 duplicates, 1,329 impossible blood-pressure rows and 124 unrealistic height/weight/BMI rows
    (70,000 -> 68,523); converted age from days to years; added BMI.
 2. **Splitting** - stratified 70% train / 15% validation / 15% test (47,966 / 10,278 / 10,279, `random_state=42`).
+
+   | Step | Rule | Rows after |
+   |---|---|---|
+   | Raw file | Kaggle CSV | 70,000 |
+   | Duplicates | identical rows, ignoring `id` | 69,976 (-24) |
+   | Blood pressure | keep `ap_hi` 70-250, `ap_lo` 40-200, `ap_hi` > `ap_lo` | 68,647 (-1,329) |
+   | Height / weight / BMI | keep height 130-210 cm, weight 35-200 kg, BMI 12-60 | 68,523 (-124) |
+   | Features | `age_years` (days / 365.25, rounded) and `bmi` added; `id` and raw `age` dropped; the target `cardio` is never a feature | 12 features |
+   | Split | stratified on the target, seed 42 | 47,966 / 10,278 / 10,279 |
+
+   All cleaning rules are fixed thresholds applied before the split, so nothing is learned from validation or test data.
+   Scalers are fitted only on training data, inside each model's Pipeline.
 3. **Models** (same split for all): Logistic Regression, KNN, Decision Tree (`criterion="entropy"`), SVM (RBF),
-   Random Forest, Gradient Boosting, HistGradientBoosting, MLP. Scale-sensitive models use `StandardScaler` inside a Pipeline.
+   Random Forest, Gradient Boosting, HistGradientBoosting. Scale-sensitive models use `StandardScaler` inside a Pipeline.
    - The entropy tree demonstrates the information-gain idea behind ID3. scikit-learn builds CART-style binary trees,
      so it is entropy-based but **not an exact ID3 implementation**.
    - The SVM uses `probability=False` for speed; its ROC-AUC is computed from `decision_function` scores. Because the app
      needs probabilities, the SVM is compared in the table but is not eligible as the deployed model.
 4. **Selection** - the final model is the eligible model with the highest **validation** ROC-AUC; the test set is only reported.
+   Gradient Boosting wins by this rule (validation ROC-AUC 0.8002). Random Forest (0.8000) and HistGradientBoosting (0.7997) are statistically tied with it,
+   so this is the outcome of a rule fixed in advance, not a claim that Gradient Boosting is truly better.
 5. **Checks** - `outputs/leakage_check.csv`: target not in features, identical feature order across splits, scalers fitted
    on training data only. About 10% of validation/test rows (1,050 / 1,095) share a feature vector with a training row;
    this is not label leakage but is worth knowing when reading the scores.
@@ -74,21 +125,31 @@ Run the commands from the project root: Streamlit reads the navy/teal theme from
 | **Gradient Boosting (final)** | 0.8002 | 0.7366 | 0.7559 | 0.6909 | 0.7219 | 0.8022 |
 | Random Forest | 0.8000 | 0.7374 | 0.7640 | 0.6791 | 0.7191 | 0.8023 |
 | HistGradientBoosting | 0.7997 | 0.7347 | 0.7556 | 0.6856 | 0.7189 | 0.8026 |
-| Neural Network (MLP) | 0.7993 | 0.7313 | 0.7447 | 0.6952 | 0.7191 | 0.7999 |
 | Logistic Regression | 0.7925 | 0.7274 | 0.7537 | 0.6671 | 0.7078 | 0.7931 |
 | Decision Tree (entropy) | 0.7908 | 0.7293 | 0.7514 | 0.6768 | 0.7121 | 0.7931 |
 | SVM (RBF) | 0.7900 | 0.7357 | 0.7637 | 0.6744 | 0.7163 | 0.7922 |
 | KNN | 0.7826 | 0.7251 | 0.7435 | 0.6783 | 0.7094 | 0.7842 |
 
-The top four models are within the test-set margin of error of each other. Systolic blood pressure is by far the most important feature.
+The top three models (Gradient Boosting, Random Forest, HistGradientBoosting) are within the test-set margin of error of each other.
+Systolic blood pressure is by far the most important feature.
+
+*Note:* an earlier version also compared a neural network (MLP); it was removed. `model_comparison.csv` is the earlier file with only that row deleted (the other rows are unchanged),
+and the comparison bar chart is drawn from it. `roc_curves.png` and `confusion_matrices_all.png` need every model's predictions, so they were regenerated by refitting the
+seven remaining models with identical data and seeds; their training/validation metrics matched the previous run exactly. These are descriptive test-set plots, not independent validation.
 
 ## Limitations
 Single public dataset and a random split (no external validation); hyper-parameters were set by hand, not tuned;
 probabilities are not calibrated; the 0.4/0.6 risk bands in the app are illustrative, not clinical cut-offs.
 
 ## Deployment
-Not deployed. Local run only (see above). Streamlit Community Cloud is an option: push the repo to GitHub
-(include `models/` and `outputs/`), choose `app/app.py` as the main file. No public URL exists yet: [add URL if you deploy].
+**Not deployed yet.** The app runs locally (see above), and on other devices on the same Wi-Fi. For a public link, Streamlit Community Cloud
+(free) can run it straight from this GitHub repository:
+1. Push the repo to GitHub. It must include `models/best_model.joblib`, `outputs/` and `requirements.txt`; the raw dataset is not needed.
+2. Sign in at https://share.streamlit.io with GitHub, choose **Create app**, pick the repository and branch, and set the main file to `app/app.py`.
+3. In *Advanced settings* choose Python 3.12 or newer. `requirements.txt` pins `scikit-learn==1.9.1` so the saved model loads exactly as it was trained.
+
+No secrets or API keys are needed. Free apps can go to sleep when unused, so the first visit afterwards may be slow.
+No public URL exists yet: [add URL if you deploy].
 
 ## Disclaimer
 Educational project, not a medical tool.

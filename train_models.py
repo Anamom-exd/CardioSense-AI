@@ -19,7 +19,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import (RandomForestClassifier, GradientBoostingClassifier, HistGradientBoostingClassifier)
-from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
                              confusion_matrix, ConfusionMatrixDisplay, roc_curve)
 
@@ -61,8 +60,6 @@ models = {
     "Random Forest": RandomForestClassifier(n_estimators=300, max_depth=10, n_jobs=-1, random_state=RS),
     "Gradient Boosting": GradientBoostingClassifier(n_estimators=200, max_depth=3, learning_rate=0.1, random_state=RS),
     "HistGradientBoosting": HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, random_state=RS),
-    "Neural Network (MLP)": Pipeline([("sc", StandardScaler()), ("m", MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=300,
-                                                                                      early_stopping=True, random_state=RS))]),
 }
 
 
@@ -171,8 +168,12 @@ ConfusionMatrixDisplay(confusion_matrix(y_test, best.predict(X_test)),
 plt.title(f"Confusion matrix (test) - {best_name}"); plt.tight_layout()
 plt.savefig("outputs/confusion_matrix.png", dpi=150); plt.close()
 
-fig, axes = plt.subplots(2, 4, figsize=(16, 7.5))
-for ax, (name, m) in zip(axes.ravel(), fitted.items()):
+# top row gets ceil(n/2) panels, bottom row the rest, centred, so an odd model count leaves no blank panel
+n = len(fitted); top = (n + 1) // 2; bottom = n - top
+fig = plt.figure(figsize=(4 * top, 7.5)); gs = fig.add_gridspec(2, 2 * top)
+slots = [gs[0, 2 * i:2 * i + 2] for i in range(top)] + [gs[1, top - bottom + 2 * i:top - bottom + 2 * i + 2] for i in range(bottom)]
+for slot, (name, m) in zip(slots, fitted.items()):
+    ax = fig.add_subplot(slot)
     ConfusionMatrixDisplay(confusion_matrix(y_test, m.predict(X_test)),
                            display_labels=["No", "Yes"]).plot(cmap="Blues", ax=ax, colorbar=False)
     ax.set_title(name, fontsize=10)

@@ -78,7 +78,7 @@ The app is a normal web page, so a phone or tablet on the same network *should* 
 ## Responsive layout for phones, tablets and desktops (tested in browser emulation only)
 - The layout adapts to the screen: on phones the metric cards form a 2 x 2 grid, the four tabs wrap onto two rows and the form and result stack;
   on tablets and desktops there are four cards in a row and a two-column form.
-- Touch-friendly: inputs, buttons, checkboxes and tabs are at least about 44 px high on phones and tablets, text is at least 12 px, and the page never scrolls sideways.
+- Touch-friendly: inputs, buttons, checkboxes and tabs are at least about 44 px high on phones and tablets, body text is at least 12 px (chart labels are 11 px), and the page never scrolls sideways.
   Tables are sized to fit the screen (the full table is in an expander).
 - The educational-use notice is a banner on every screen size (and also in the sidebar on larger screens).
 - **What was actually tested:** a desktop browser's device emulation at 375 x 812 (phone), 768 x 1024 (tablet) and a 1024 px-wide desktop window,
